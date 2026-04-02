@@ -24,30 +24,6 @@ provider "aws" {
 }
 
 ############################
-# Variables
-############################
-
-variable "aws_region" {
-  default = "ap-south-1"
-}
-
-variable "instance_type" {
-  default = "t3.medium"
-}
-
-variable "allowed_cidr" {
-  description = "Your public IP CIDR for RDP access"
-}
-
-variable "rdp_user" {
-  default = "rdpuser"
-}
-
-variable "rdp_password" {
-  sensitive = true
-}
-
-############################
 # Ubuntu 24.04 AMI
 ############################
 
