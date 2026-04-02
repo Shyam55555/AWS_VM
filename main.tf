@@ -47,7 +47,7 @@ data "aws_ami" "ubuntu" {
 ############################
 
 resource "aws_security_group" "rdp_sg" {
-  name        = "ubuntu-rdp-sg"
+  name        = "${var.vm_name}-sg"
   description = "Allow RDP only"
 
   ingress {
@@ -71,7 +71,7 @@ resource "aws_security_group" "rdp_sg" {
 ############################
 
 resource "aws_iam_role" "ssm_role" {
-  name = "ec2-ssm-role"
+  name = "${var.vm_name}-ssm-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -91,7 +91,7 @@ resource "aws_iam_role_policy_attachment" "ssm_policy" {
 }
 
 resource "aws_iam_instance_profile" "ssm_profile" {
-  name = "ec2-ssm-profile"
+  name = "${var.vm_name}-ssm-profile"
   role = aws_iam_role.ssm_role.name
 }
 
@@ -125,18 +125,6 @@ resource "aws_instance" "ubuntu_rdp" {
   EOF
 
   tags = {
-    Name = "ubuntu-24-rdp-ssm"
+    Name = var.vm_name
   }
-}
-
-############################
-# Outputs
-############################
-
-output "public_ip" {
-  value = aws_instance.ubuntu_rdp.public_ip
-}
-
-output "instance_id" {
-  value = aws_instance.ubuntu_rdp.id
 }
