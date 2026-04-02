@@ -1,9 +1,19 @@
 variable "aws_region" {
-  default = "ap-south-1"
+  description = "AWS region"
+  default     = "ap-south-1"
 }
 
 variable "instance_type" {
-  default = "t3.medium"
+  description = "EC2 instance type"
+  default     = "t3.medium"
+}
+
+variable "allowed_cidr" {
+  description = "CIDR block allowed to access RDP"
+}
+
+variable "vm_name" {
+  description = "Name of the EC2 VM"
 }
 
 variable "rdp_user" {
