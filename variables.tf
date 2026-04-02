@@ -5,7 +5,7 @@ variable "aws_region" {
 
 variable "instance_type" {
   description = "EC2 instance type"
-  default     = "t3.medium"
+  default     = "m7i-flex.large"
 }
 
 variable "allowed_cidr" {
