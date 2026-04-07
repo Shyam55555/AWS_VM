@@ -15,31 +15,8 @@ terraform {
   }
 }
 
-############################
-# Provider
-############################
-
 provider "aws" {
   region = var.aws_region
-}
-
-############################
-# Ubuntu 24.04 AMI
-############################
-
-data "aws_ami" "ubuntu" {
-  most_recent = true
-  owners      = ["099720109477"] # Canonical
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-noble-24.04-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
 }
 
 ############################
@@ -51,7 +28,6 @@ resource "aws_security_group" "rdp_sg" {
   description = "Allow RDP only"
 
   ingress {
-    description = "RDP access"
     from_port   = 3389
     to_port     = 3389
     protocol    = "tcp"
@@ -96,33 +72,41 @@ resource "aws_iam_instance_profile" "ssm_profile" {
 }
 
 ############################
-# EC2 Instance (NO Key Pair)
+# EC2 Instance (Pinned AMI)
 ############################
 
 resource "aws_instance" "ubuntu_rdp" {
-  ami                         = data.aws_ami.ubuntu.id
-  instance_type               = var.instance_type
+
+  # ✅ Use a known-good Ubuntu 24.04 AMI for ap-south-1
+  ami           = "ami-0f58b397bc5c1f2e8" # Example – replace with latest from your account
+  instance_type = var.instance_type
+
   iam_instance_profile        = aws_iam_instance_profile.ssm_profile.name
   vpc_security_group_ids      = [aws_security_group.rdp_sg.id]
   associate_public_ip_address = true
 
+  depends_on = [
+    aws_iam_role_policy_attachment.ssm_policy,
+    aws_iam_instance_profile.ssm_profile
+  ]
+
   user_data = <<-EOF
-    #!/bin/bash
-    apt update -y
-    apt install -y xfce4 xfce4-goodies xrdp ubuntu-desktop-minimal snapd
+#!/bin/bash
+apt update -y
+apt install -y xfce4 xfce4-goodies xrdp ubuntu-desktop-minimal snapd
 
-    snap install amazon-ssm-agent --classic
+snap install amazon-ssm-agent --classic
 
-    systemctl enable xrdp
-    systemctl restart xrdp
+systemctl enable xrdp
+systemctl restart xrdp
 
-    adduser --disabled-password --gecos "" ${var.rdp_user}
-    echo "${var.rdp_user}:${var.rdp_password}" | chpasswd
-    usermod -aG sudo ${var.rdp_user}
+adduser --disabled-password --gecos "" ${var.rdp_user}
+echo "${var.rdp_user}:${var.rdp_password}" | chpasswd
+usermod -aG sudo ${var.rdp_user}
 
-    echo xfce4-session > /home/${var.rdp_user}/.xsession
-    chown ${var.rdp_user}:${var.rdp_user} /home/${var.rdp_user}/.xsession
-  EOF
+echo xfce4-session > /home/${var.rdp_user}/.xsession
+chown ${var.rdp_user}:${var.rdp_user} /home/${var.rdp_user}/.xsession
+EOF
 
   tags = {
     Name = var.vm_name
